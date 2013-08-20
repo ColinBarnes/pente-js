@@ -1,0 +1,18 @@
+#title {
+	width: 500px;
+	font-size: 20px;
+	text-align: center;
+	font-family: sans-serif;
+}
+
+#gameCanvas {
+	display: block;
+	font-family: sans-serif;
+}
+
+.playerScore {
+	float: left;
+	width: 250px;
+	font-family: sans-serif;
+	margin-left: 20px;
+}
