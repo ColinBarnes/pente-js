@@ -1,4 +1,4 @@
-var DEBUG = true;
+var DEBUG = false;
 
 function log(text){
 	if(DEBUG){
@@ -435,6 +435,7 @@ var Controller = {
 $(document).ready(function(){
 	Model.init(19,19);
 	Model.play(9,9);
+	$("#undo").click(gameState.undo);
 });
 
 
