@@ -1,4 +1,4 @@
-var DEBUG = false;
+var DEBUG = true;
 
 function log(text){
 	if(DEBUG){
@@ -64,9 +64,12 @@ var Model = {
 			Model.performKills(xPos,yPos);
 			log("PLACE: "+xPos+", "+yPos);
 			if(Model.isFive(xPos,yPos) || Model.score[0] >= 5 || Model.score[1] >= 5){
-				Model.gameOver = true;
+				//Model.gameOver = true;
+				gameState.perform(new Action.gameOver(gameOver));
 			}
-			Model.thisPlayer = Math.abs(Model.thisPlayer-1); // Switch player
+			//Model.thisPlayer = Math.abs(Model.thisPlayer-1); // Switch player
+			gameState.perform(new Action.switchPlayer(Model.thisPlayer));
+			gameState.newTurn();
 		}
 		View.draw();
 	},
@@ -80,9 +83,10 @@ var Model = {
 	},
 
 	place: function(xPos,yPos){
-		Model.board[xPos][yPos] = Model.currentPlayer();
-		Model.moves.push(Model.board);
+		//Model.board[xPos][yPos] = Model.currentPlayer();
+		//Model.moves.push(Model.board);
 		// Model.display();
+		gameState.perform(new Action.place(xPos,yPos,Model.thisPlayer));
 	},
 
 	// Returns false if space is either taken or not on the board
@@ -157,9 +161,10 @@ var Model = {
 				if(Model.onBoard(xPos+displace[i]*3, yPos+displace[j]*3)){ // If there is a place 3 spots away in this direction
 					if(Model.currentPlayer() === Model.board[xPos+displace[i]*3][yPos+displace[j]*3]){ // If the current player has a piece 3 spots away
 						if(Model.otherPlayer() === Model.board[xPos+displace[i]][yPos+displace[j]] && Model.otherPlayer() === Model.board[xPos+displace[i]*2][yPos+displace[j]*2]){ // Check if there are two of the other player's pieces next to the xPos & yPos
-							Model.score[Model.currentPlayer()]++;
-							Model.board[xPos+displace[i]][yPos+displace[j]] = null;
-							Model.board[xPos+displace[i]*2][yPos+displace[j]*2] = null;
+							//Model.score[Model.currentPlayer()]++;
+							//Model.board[xPos+displace[i]][yPos+displace[j]] = null;
+							//Model.board[xPos+displace[i]*2][yPos+displace[j]*2] = null;
+							gameState.perform(new Action.removePieces(xPos+displace[i],yPos+displace[j],xPos+displace[i]*2,yPos+displace[j]*2,Model.thisPlayer,Model.score));
 						}
 					}
 				}
@@ -224,7 +229,7 @@ var Model = {
 };
 
 // Module that contains every action and a corresponding undo
-var Actions = (function(Model){
+var Action = (function(Model){
 	// Game Over
 	function gameOver(isOver) {
 		this.isOver = isOver;
@@ -313,17 +318,19 @@ var gameState  = {
 	turnStack: [],
 	perform: function(command){
 		command.execute();
-		turnStack.push(command);
+		gameState.turnStack.push(command);
 	},
 	newTurn: function(){
-		gameStack.push(turnStack);
-		turnStack = [];
+		gameState.gameStack.push(gameState.turnStack);
+		gameState.turnStack = [];
 	},
 	undo: function(command){
-		turn = gameStack.pop();
+		turn = gameState.gameStack.pop();
+		log(turn);
 		while(turn.length>0){
 			turn.pop().unexecute();
 		}
+		View.draw();
 	}
 };
 
