@@ -65,7 +65,7 @@ var Model = {
 			log("PLACE: "+xPos+", "+yPos);
 			if(Model.isFive(xPos,yPos) || Model.score[0] >= 5 || Model.score[1] >= 5){
 				//Model.gameOver = true;
-				gameState.perform(new Action.gameOver(gameOver));
+				gameState.perform(new Action.gameOver(Model.gameOver));
 			}
 			//Model.thisPlayer = Math.abs(Model.thisPlayer-1); // Switch player
 			gameState.perform(new Action.switchPlayer(Model.thisPlayer));
@@ -419,6 +419,7 @@ var Controller = {
 	init: function(){
 		canvas = document.getElementById("gameCanvas");
 		canvas.addEventListener("click", Controller.onCanvasClick, false);
+		$("#undo").click(gameState.undo);
 	},
 
 	onCanvasClick: function(ev){
@@ -435,7 +436,6 @@ var Controller = {
 $(document).ready(function(){
 	Model.init(19,19);
 	Model.play(9,9);
-	$("#undo").click(gameState.undo);
 });
 
 
