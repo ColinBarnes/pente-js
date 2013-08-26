@@ -6,8 +6,6 @@ function log(text){
 	}
 }
 
-var socket = io.connect('http://localhost:8080');
-
 var View = {
 
 	canvas: null,
@@ -115,6 +113,7 @@ var Controller = {
 };
 
 // Server communication
+var socket = io.connect('http://localhost:8080');
 
 // When the server is ready
 socket.on('serverReady', function(gameStarted){
