@@ -32,7 +32,7 @@ io.sockets.on('connection', function(socket){
 
 	// On request to undo
 	socket.on('undo', function(data){
-		gameState.undo();
+		Model.undo();
 		io.sockets.emit('render',Model.getCurrentState());
 	});
 
@@ -47,7 +47,8 @@ var Model = {
 	// board[x][y] would contain the state of the board x places from
 	// the left and y places from the top, zero-indexed.
 	board: [],
-	moves: [],
+	gameStack: [],
+	turnStack: [],
 	score: {0: 0, 1:0},
 	gameOver: false,
 	thisPlayer: 0,
@@ -74,7 +75,24 @@ var Model = {
 		};
 		return currentState;
 	},
-
+	//   Taken From gameState
+	//---------------------------------------------------
+	perform: function(command){
+		command.execute();
+		Model.turnStack.push(command);
+	},
+	newTurn: function(){
+		Model.gameStack.push(Model.turnStack);
+		Model.turnStack = [];
+	},
+	undo: function(command){
+		turn = Model.gameStack.pop();
+		log(turn);
+		while(turn.length>0){
+			turn.pop().unexecute();
+		}
+	},
+	//---------------------------------------------------
 	currentPlayer: function(){
 		return Model.thisPlayer;
 	},
@@ -90,11 +108,11 @@ var Model = {
 			log("PLACE: "+xPos+", "+yPos);
 			if(Model.isFive(xPos,yPos) || Model.score[0] >= 5 || Model.score[1] >= 5){
 				//Model.gameOver = true;
-				gameState.perform(new Action.gameOver(Model.gameOver));
+				Model.perform(new Action.gameOver(Model.gameOver));
 			}
 			//Model.thisPlayer = Math.abs(Model.thisPlayer-1); // Switch player
-			gameState.perform(new Action.switchPlayer(Model.thisPlayer));
-			gameState.newTurn();
+			Model.perform(new Action.switchPlayer(Model.thisPlayer));
+			Model.newTurn();
 		}
 	},
 
@@ -107,7 +125,7 @@ var Model = {
 	},
 
 	place: function(xPos,yPos){
-		gameState.perform(new Action.place(xPos,yPos,Model.thisPlayer));
+		Model.perform(new Action.place(xPos,yPos,Model.thisPlayer));
 	},
 
 	// Returns false if space is either taken or not on the board
@@ -160,7 +178,7 @@ var Model = {
 							//Model.score[Model.currentPlayer()]++;
 							//Model.board[xPos+displace[i]][yPos+displace[j]] = null;
 							//Model.board[xPos+displace[i]*2][yPos+displace[j]*2] = null;
-							gameState.perform(new Action.removePieces(xPos+displace[i],yPos+displace[j],xPos+displace[i]*2,yPos+displace[j]*2,Model.thisPlayer,Model.score));
+							Model.perform(new Action.removePieces(xPos+displace[i],yPos+displace[j],xPos+displace[i]*2,yPos+displace[j]*2,Model.thisPlayer,Model.score));
 						}
 					}
 				}
