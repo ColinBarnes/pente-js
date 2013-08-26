@@ -75,25 +75,6 @@ var Model = {
 		return currentState;
 	},
 
-	undo: function(){ // WARNING: does not undo score.
-		board = Model.board.pop();
-	},
-
-	display: function(){
-		for (var i=0; i<Model.board[0].length; i++){
-			var row = "|";
-			for(var j=0; j<Model.board.length; j++){
-				if (Model.board[j][i] === null)
-					row += "_|";
-				else {
-					row += Model.board[j][i];
-					row += "|";
-				}
-			}
-			console.log(row);
-		}
-	},
-
 	currentPlayer: function(){
 		return Model.thisPlayer;
 	},
@@ -126,9 +107,6 @@ var Model = {
 	},
 
 	place: function(xPos,yPos){
-		//Model.board[xPos][yPos] = Model.currentPlayer();
-		//Model.moves.push(Model.board);
-		// Model.display();
 		gameState.perform(new Action.place(xPos,yPos,Model.thisPlayer));
 	},
 
@@ -138,31 +116,6 @@ var Model = {
 			return true;
 		else
 			return false;
-	},
-
-	altSuicide: function(xPos,yPos){
-		var isSuicide = false;
-		for(var i=0; i<=1; i++){
-			for(var j=0; j<=1; j++){ // Generate <i,j> vectors for each non-negative direction
-				if(i===0 && j===0) // Skip the vector <0,0>
-					continue;
-				if(Model.onBoard(xPos+i, yPos+j) && Model.onBoard(xPos-i, yPos-j) && !Model.isEmpty(xPos+i,yPos+j) && !Model.isEmpty(xPos-i,yPos-j)){ // If there are pieces on both sides of the space in the orientation of the vector
-					if(Model.board[xPos+i][yPos+j] !== Model.board[xPos-i][yPos-j]){ // If there are different colors on both sides [B][ ][W]
-						if(Model.onBoard(xPos+i*2, yPos+i*2)){ // If there is a space two units out in the direction of the vector
-							if(Model.board[xPos+i][yPos+j] === Model.currentPlayer() && Model.board[xPos+i*2][yPos+j*2] === Model.otherPlayer()){ // Check for [B][ ][W][B] assuming currentPlayer is white
-								isSuicide = true;
-							}
-						}
-						if(Model.onBoard(xPos-i*2,yPos-j*2)){ // If there is a space two units out in the opposite direction of the vector
-							if(Model.board[xPos-i][yPos-j] === Model.currentPlayer() && Model.board[xPos-i*2][yPos-j*2] === Model.otherPlayer()){ // Check for [W][B][ ][W] assuming currentPlayer is black
-								isSuicide = true;
-							}
-						}
-					}
-				}
-			}
-		}
-		return isSuicide;
 	},
 
 	isSuicide: function(xPos, yPos){
@@ -373,6 +326,5 @@ var gameState  = {
 		while(turn.length>0){
 			turn.pop().unexecute();
 		}
-		View.draw();
 	}
 };
