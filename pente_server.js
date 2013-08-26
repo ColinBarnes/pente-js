@@ -325,24 +325,3 @@ var Action = (function(Model){
 		removePieces: removePieces
 	};
 })(Model);
-
-// Store the game state control undo operations
-var gameState  = {
-	gameStack: [],
-	turnStack: [],
-	perform: function(command){
-		command.execute();
-		gameState.turnStack.push(command);
-	},
-	newTurn: function(){
-		gameState.gameStack.push(gameState.turnStack);
-		gameState.turnStack = [];
-	},
-	undo: function(command){
-		turn = gameState.gameStack.pop();
-		log(turn);
-		while(turn.length>0){
-			turn.pop().unexecute();
-		}
-	}
-};
