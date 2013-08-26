@@ -10,3 +10,9 @@ To Do:
 
 Bugs:
 -----
+
+Recent:
+-------
+
+* Added socket.io.js to pente.html
+* Created pente_server.js and pente_client.js
