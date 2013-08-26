@@ -1,4 +1,4 @@
-var DEBUG = true;
+var DEBUG = false;
 
 function log(text){
 	if(DEBUG){
@@ -117,7 +117,7 @@ var Controller = {
 // Server communication
 
 // When the server is ready
-socket.on('serverReady', function(readyStatus){
+socket.on('serverReady', function(gameStarted){
 	log("Server is Ready");
 	// Request a new game with board size xBoardSize by yBoard Size
 	socket.emit('newBoard', {xBoardSize: 19, yBoardSize: 19});

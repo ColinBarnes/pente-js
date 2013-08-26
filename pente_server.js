@@ -11,13 +11,15 @@ var io = require('socket.io').listen(8080);
 // On connection to the client
 io.sockets.on('connection', function(socket){
 	// Let the client know that the server is ready
-	socket.emit('serverReady', {ready: true});
+	socket.emit('serverReady', GAMESTARTED);
 
 	// On request for a new game
 	socket.on('newBoard', function(board){
 		log('New game requested');
 		// Create new  game with requested board size
-		Model.init(board.xBoardSize, board.yBoardSize);
+		if(!GAMESTARTED){
+			Model.init(board.xBoardSize, board.yBoardSize);
+		}
 		io.sockets.emit('render',Model.getCurrentState());
 	});
 
@@ -30,11 +32,13 @@ io.sockets.on('connection', function(socket){
 
 	// On request to undo
 	socket.on('undo', function(data){
-		gamesState.undo();
+		gameState.undo();
 		io.sockets.emit('render',Model.getCurrentState());
 	});
 
 });
+
+var GAMESTARTED = false; // Has a game already started
 
 
 var Model = {
@@ -58,6 +62,7 @@ var Model = {
 				Model.board[i][len] = null;
 			}
 		}
+		GAMESTARTED = true;
 	},
 
 	getCurrentState: function(){
