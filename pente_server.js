@@ -6,6 +6,24 @@ function log(text){
 	}
 }
 
+// Basic hashing function used to generate the game codes
+function adler32(data) {
+    var MOD_ADLER = 65521;
+    var a = 1, b = 0;
+    var index;
+ 
+    // Process each byte of the data in order
+    for (index = 0; index < data.length; ++index) {
+        a = (a + data.charCodeAt(index)) % MOD_ADLER;
+        b = (b + a) % MOD_ADLER;
+    }
+    //adler checksum as integer;
+    var adler = a | (b << 16);
+ 
+    //adler checksum as byte array
+    return adler.toString(16);
+}
+
 var io = require('socket.io').listen(8080);
 
 // On connection to the client
@@ -17,23 +35,37 @@ io.sockets.on('connection', function(socket){
 	socket.on('newBoard', function(board){
 		log('New game requested');
 		// Create new  game with requested board size
+		/*** Depricated while addiing multiple games
 		if(!GAMESTARTED){
 			Model.init(board.xBoardSize, board.yBoardSize);
 		}
-		io.sockets.emit('render',Model.getCurrentState());
+		*/
+
+		// Use the current time and date as the input to the hash
+		var hashInput = new Date();
+		hashInput = hashInput.toISOString();
+
+		// Store the hash in the socket
+		socket.gameCode = adler32(hashInput);
+		log("Hash is "+socket.gameCode);
+		// Join the room with that code
+		socket.join(socket.gameCode);
+		Model.init(board.xBoardSize, board.yBoardSize);
+		socket.emit('joinedGame', socket.gameCode);
+		io.sockets.in(socket.gameCode).emit('render',Model.getCurrentState());
 	});
 
 	// On request to play a postion
 	socket.on('play', function(position){
 		log('Play at '+position.xPos+", "+position.yPos);
 		Model.play(position.xPos, position.yPos);
-		io.sockets.emit('render',Model.getCurrentState());
+		io.sockets.in(socket.gameCode).emit('render',Model.getCurrentState());
 	});
 
 	// On request to undo
 	socket.on('undo', function(data){
 		Model.undo();
-		io.sockets.emit('render',Model.getCurrentState());
+		io.sockets.in(socket.gameCode).emit('render',Model.getCurrentState());
 	});
 
 });

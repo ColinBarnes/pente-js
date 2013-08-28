@@ -1,4 +1,5 @@
-var DEBUG = false;
+var DEBUG = true;
+var GAMECODE = null;
 
 function log(text){
 	if(DEBUG){
@@ -94,6 +95,10 @@ var Controller = {
 		$("#undo").click(function(){
 			socket.emit('undo',{undo: true});
 		});
+		$("#newGame").click(function(){
+			log("clicked new game");
+			socket.emit('newBoard', {xBoardSize: 19, yBoardSize: 19});
+		});
 		Controller.xSpaces = xSpaces;
 		Controller.ySpaces = ySpaces;
 	},
@@ -119,9 +124,14 @@ var socket = io.connect('http://localhost:8080');
 socket.on('serverReady', function(gameStarted){
 	log("Server is Ready");
 	// Request a new game with board size xBoardSize by yBoard Size
-	socket.emit('newBoard', {xBoardSize: 19, yBoardSize: 19});
 	View.init();
 	Controller.init(19,19);
+});
+
+// When joining a new game
+socket.on('joinedGame', function(gameCode){
+	GAMECODE = gameCode;
+	window.location.href = window.location.href+"#"+GAMECODE;
 });
 
 // When the sever sends an update
