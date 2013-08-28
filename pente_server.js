@@ -151,7 +151,6 @@ var Game = {
 	},
 	undo: function(command, Model){
 		turn = Model.gameStack.pop();
-		log(turn);
 		while(turn.length>0){
 			turn.pop().unexecute(Model);
 		}
@@ -166,17 +165,13 @@ var Game = {
 	},
 
 	play: function(xPos, yPos, Model) {
-		log("Model thisPlayer: "+Model.thisPlayer);
 		if(Game.canPlay(xPos, yPos, Model)){
 			Game.place(xPos, yPos, Model);
 			Game.performKills(xPos, yPos, Model);
-			log("PLACE: "+xPos+", "+yPos);
 			if(Game.isFive(xPos, yPos, Model) || Model.score[0] >= 5 || Model.score[1] >= 5){
-				//Model.gameOver = true;
 				Game.perform(new Action.gameOver(Model.gameOver), Model);
 			}
-			//Model.thisPlayer = Math.abs(Model.thisPlayer-1); // Switch player
-			Game.perform(new Action.switchPlayer(Model.thisPlayer), Model);
+			Game.perform(new Action.switchPlayer(Model), Model);
 			Game.newTurn(Model);
 		}
 	},
@@ -208,7 +203,7 @@ var Game = {
 			for(var j=0; j<displace.length; j++){ // Generate vectors <i,j> for every direction
 				if(i===1 && j===1) // Skip the vector <0,0>
 					continue;
-				if(Game.onBoard(xPos+displace[i], yPos+displace[j], Model) && Game.onBoard(xPos-displace[i], yPos-displace[j], Model) && !Game.isEmpty(xPos+displace[i],yPos+displace[j], Model) && !Game.isEmpty(xPos-displace[i],yPos-displace[j]), Model){ // If there are pieces on both sides of the space in the orientation of the vector
+				if(Game.onBoard(xPos+displace[i], yPos+displace[j], Model) && Game.onBoard(xPos-displace[i], yPos-displace[j], Model) && !Game.isEmpty(xPos+displace[i],yPos+displace[j], Model) && !Game.isEmpty(xPos-displace[i],yPos-displace[j], Model)){ // If there are pieces on both sides of the space in the orientation of the vector
 					if(Model.board[xPos+displace[i]][yPos+displace[j]] === Game.currentPlayer(Model) && Model.board[xPos-displace[i]][yPos-displace[j]] === Game.otherPlayer(Model)){ // If the piece in front is current player and behind is other player
 						if(Game.onBoard(xPos+displace[i]*2,yPos+displace[j]*2), Model){ // If two places in front is on the board
 							if(Model.board[xPos+displace[i]*2][yPos+displace[j]*2] === Game.otherPlayer(Model)){ // If the piece two pieces in front is the other player
@@ -261,11 +256,8 @@ var Game = {
 				var numberOfPieces = 1;
 				var morePieces = true;
 				while(morePieces){ // Check in the positive direction
-					log("Check if "+(xPos+i*scalar)+", "+(yPos+j*scalar)+" is on the board.");
 					if(Game.onBoard(xPos+i*scalar, yPos+j*scalar, Model)){ // If the next piece is on the board
-						log((xPos+i*scalar)+", "+(yPos+j*scalar)+" is on the board.");
-						if(Model.board[xPos+i*scalar][yPos+j*scalar] === Game.currentPlayer(Model)){ // If the next piece is the same as the current player
-							log((xPos+i*scalar)+", "+(yPos+j*scalar)+" is current player's piece");
+						if(Model.board[xPos+i*scalar][yPos+j*scalar] === Game.currentPlayer(Model)){ // If the next piece is the same as the current player							
 							numberOfPieces++;
 							scalar++;
 						}
@@ -280,12 +272,9 @@ var Game = {
 
 				morePieces = true;
 				scalar = 1;
-				while(morePieces){ // Check in the negative direction
-					log("Check if "+(xPos+i*-scalar)+", "+(yPos+j*-scalar)+" is on the board.");
-					if(Game.onBoard(xPos+i*-scalar,yPos+j*-scalar, Model)){ // If the next piece is on the board
-						log((xPos+i*-scalar)+", "+(yPos+j*-scalar)+" is on the board.");
-						if(Model.board[xPos+i*-scalar][yPos+j*-scalar] === Game.currentPlayer(Model)){ // If the next piece is the same as the current player
-							log((xPos+i*-scalar)+", "+(yPos+j*-scalar)+" is current player's piece");
+				while(morePieces){ // Check in the negative direction					
+					if(Game.onBoard(xPos+i*-scalar,yPos+j*-scalar, Model)){ // If the next piece is on the board						
+						if(Model.board[xPos+i*-scalar][yPos+j*-scalar] === Game.currentPlayer(Model)){ // If the next piece is the same as the current player							
 							numberOfPieces++;
 							scalar++;
 						}
@@ -298,7 +287,6 @@ var Game = {
 					}
 					
 				}
-				log("Number of pieces: "+numberOfPieces);
 				if (numberOfPieces>=5)
 					thereIsFive = true;
 			}
@@ -308,7 +296,7 @@ var Game = {
 };
 
 // Module that contains every action and a corresponding undo
-var Action = (function(){
+var Action = (function(ALLGAMES){
 	// Game Over
 	function gameOver(Model) {
 		this.isOver = Model.gameOver;
@@ -389,4 +377,4 @@ var Action = (function(){
 		switchPlayer: switchPlayer,
 		removePieces: removePieces
 	};
-})();
+})(ALLGAMES);
