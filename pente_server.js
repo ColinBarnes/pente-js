@@ -1,6 +1,5 @@
 var DEBUG = true;
-var GAMESTARTED = false; // Has a game already started
-var ALLGAMES = {};
+var ALLGAMES = {}; // 
 
 function log(text){
 	if(DEBUG){
@@ -35,7 +34,7 @@ var io = require('socket.io').listen(8080);
 // On connection to the client
 io.sockets.on('connection', function(socket){
 	// Let the client know that the server is ready
-	socket.emit('serverReady', GAMESTARTED);
+	socket.emit('serverReady');
 
 	// On request for a new game
 	socket.on('newBoard', function(board){
@@ -68,6 +67,20 @@ io.sockets.on('connection', function(socket){
 		Game.init(board.xBoardSize, board.yBoardSize, ALLGAMES[socket.gameCode]);
 		socket.emit('joinedGame', socket.gameCode);
 		io.sockets.in(socket.gameCode).emit('render',ALLGAMES[socket.gameCode]);
+	});
+	
+	socket.on('joinGame', function(hash){
+		log("Received hash: "+hash);
+		if(ALLGAMES.hasOwnProperty(hash)){
+			socket.gameCode = hash;
+			socket.join(socket.gameCode);
+			log("Sending joinedGame");
+			socket.emit('joinedGame', socket.gameCode);
+			io.sockets.in(socket.gameCode).emit('render',ALLGAMES[socket.gameCode]);
+		} else {
+			log("hash doesn't exist");
+			socket.emit('doesNotExist', hash);
+		}
 	});
 
 	// On request to play a postion
@@ -139,8 +152,7 @@ var Game = {
 		};
 		return currentState;
 	},
-	//   Taken From gameState
-	//---------------------------------------------------
+
 	perform: function(command, Model){
 		command.execute(Model);
 		Model.turnStack.push(command);
@@ -155,7 +167,7 @@ var Game = {
 			turn.pop().unexecute(Model);
 		}
 	},
-	//---------------------------------------------------
+
 	currentPlayer: function(Model){
 		return Model.thisPlayer;
 	},
@@ -295,7 +307,10 @@ var Game = {
 	}
 };
 
-// Module that contains every action and a corresponding undo
+/***********************
+    Undoable Actions
+************************/
+
 var Action = (function(ALLGAMES){
 	// Game Over
 	function gameOver(Model) {

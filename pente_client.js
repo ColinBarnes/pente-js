@@ -99,6 +99,12 @@ var Controller = {
 			log("clicked new game");
 			socket.emit('newBoard', {xBoardSize: 19, yBoardSize: 19});
 		});
+		$("#joinGame").click(function(){
+			log("clicked join game");
+			GAMECODE = $("#gameCode").val();
+			log("Entered code: "+GAMECODE);
+			socket.emit('joinGame', GAMECODE);
+		});
 		Controller.xSpaces = xSpaces;
 		Controller.ySpaces = ySpaces;
 	},
@@ -114,14 +120,21 @@ var Controller = {
 		// Request to play at postion (xSpace, ySpace)
 		socket.emit('play', {xPos: xSpace, yPos: ySpace});
 		log("Request to play "+xSpace+", "+ySpace);
+	},
+
+	doesNotExist: function(hash){
+		$("#gameCode").val(hash+" is not an existing game");
 	}
 };
 
-// Server communication
+/***************************
+    Socket Communication
+***************************/
+
 var socket = io.connect('http://localhost:8080');
 
 // When the server is ready
-socket.on('serverReady', function(gameStarted){
+socket.on('serverReady', function(){
 	log("Server is Ready");
 	// Request a new game with board size xBoardSize by yBoard Size
 	View.init();
@@ -130,6 +143,7 @@ socket.on('serverReady', function(gameStarted){
 
 // When joining a new game
 socket.on('joinedGame', function(gameCode){
+	log("joined game: "+gameCode);
 	GAMECODE = gameCode;
 	window.location.href = window.location.href+"#"+GAMECODE;
 });
@@ -138,4 +152,8 @@ socket.on('joinedGame', function(gameCode){
 socket.on('render', function(Model){
 	log("Redraw");
 	View.draw(Model);
+});
+
+socket.on('doesNotExist', function(hash){
+	Controller.doesNotExist(hash);
 });
