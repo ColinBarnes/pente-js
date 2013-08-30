@@ -79,6 +79,7 @@ io.sockets.on('connection', function(socket){
 		}
 	});
 
+// !!! WARNING !!! Does not check if part of a game first
 	// On request to play a postion
 	socket.on('play', function(position){
 		if(socket.player === ALLGAMES[socket.gameCode].thisPlayer){
@@ -96,9 +97,11 @@ io.sockets.on('connection', function(socket){
 
 	// On request to end turn
 	socket.on('endTurn', function(){
-		ALLGAMES[socket.gameCode].alreadyPlayed = false;
-		Game.perform(new Action.switchPlayer(ALLGAMES[socket.gameCode]), ALLGAMES[socket.gameCode]);
-		Game.newTurn(ALLGAMES[socket.gameCode]);
+		if(socket.player === ALLGAMES[socket.gameCode].thisPlayer){
+			ALLGAMES[socket.gameCode].alreadyPlayed = false;
+			Game.perform(new Action.switchPlayer(ALLGAMES[socket.gameCode]), ALLGAMES[socket.gameCode]);
+			Game.newTurn(ALLGAMES[socket.gameCode]);
+		}
 	});
 
 });

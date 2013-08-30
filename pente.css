@@ -1,3 +1,7 @@
+body {
+	background: #2C3E50;
+	color: #FFF;
+}
 #title {
 	width: 500px;
 	font-size: 20px;

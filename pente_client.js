@@ -24,10 +24,10 @@ var View = {
 		var boardHeight        = canvas.height;
 		var spaceWidth         = boardWidth/xSpaces;
 		var spaceHeight        = boardHeight/ySpaces;
-		var backgroundColor    = "#dbba69";
-		var firstPlayerColor   = "#000";
-		var secondPlayerColor  = "#FFF";
-		var lineColor          = "#000";
+		var backgroundColor    = "#34495E";
+		var firstPlayerColor   = "#3498DB";
+		var secondPlayerColor  = "#2ECC71";
+		var lineColor          = "#2C3E50";
 		var pieceRadius        = spaceWidth/2;
 		context.fillStyle = backgroundColor;
 		context.fillRect(0,0,boardWidth,boardHeight);
@@ -128,6 +128,8 @@ var Controller = {
 	}
 };
 
+
+
 /***************************
     Socket Communication
 ***************************/
@@ -146,7 +148,7 @@ socket.on('serverReady', function(){
 socket.on('joinedGame', function(gameCode){
 	log("joined game: "+gameCode);
 	GAMECODE = gameCode;
-	window.location.href = window.location.href+"#"+GAMECODE;
+	window.location.href = window.location.href+"#/"+GAMECODE;
 });
 
 // When the sever sends an update
