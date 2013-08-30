@@ -92,8 +92,9 @@ var Controller = {
 	init: function(xSpaces,ySpaces){
 		canvas = document.getElementById("gameCanvas");
 		canvas.addEventListener("click", Controller.onCanvasClick, false);
-		$("#undo").click(function(){
-			socket.emit('undo',{undo: true});
+		$("#endTurn").click(function(){
+			log("clicked end turn");
+			socket.emit('endTurn');
 		});
 		$("#newGame").click(function(){
 			log("clicked new game");

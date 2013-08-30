@@ -39,12 +39,6 @@ io.sockets.on('connection', function(socket){
 	// On request for a new game
 	socket.on('newBoard', function(board){
 		log('New game requested');
-		// Create new  game with requested board size
-		/*** Depricated while addiing multiple games
-		if(!GAMESTARTED){
-			Model.init(board.xBoardSize, board.yBoardSize);
-		}
-		*/
 
 		// Use the current time and date as the input to the hash
 		var hashInput = new Date();
@@ -61,6 +55,7 @@ io.sockets.on('connection', function(socket){
 		ALLGAMES[hash] = new gameState(hash);
 		// Store the hash in the socket
 		socket.gameCode = hash;
+		socket.player = 0;
 		log("Hash is "+socket.gameCode);
 		// Join the room with that hash
 		socket.join(socket.gameCode);
@@ -73,6 +68,7 @@ io.sockets.on('connection', function(socket){
 		log("Received hash: "+hash);
 		if(ALLGAMES.hasOwnProperty(hash)){
 			socket.gameCode = hash;
+			socket.player = 1;
 			socket.join(socket.gameCode);
 			log("Sending joinedGame");
 			socket.emit('joinedGame', socket.gameCode);
@@ -85,15 +81,24 @@ io.sockets.on('connection', function(socket){
 
 	// On request to play a postion
 	socket.on('play', function(position){
-		log('Play at '+position.xPos+", "+position.yPos);
-		Game.play(position.xPos, position.yPos, ALLGAMES[socket.gameCode]);
-		io.sockets.in(socket.gameCode).emit('render',ALLGAMES[socket.gameCode]);
+		if(socket.player === ALLGAMES[socket.gameCode].thisPlayer){
+			log('Play at '+position.xPos+", "+position.yPos);
+			Game.play(position.xPos, position.yPos, ALLGAMES[socket.gameCode]);
+			io.sockets.in(socket.gameCode).emit('render',ALLGAMES[socket.gameCode]);
+		}
 	});
 
 	// On request to undo
 	socket.on('undo', function(data){
 		Game.undo(ALLGAMES[socket.gameCode]);
 		io.sockets.in(socket.gameCode).emit('render',ALLGAMES[socket.gameCode]);
+	});
+
+	// On request to end turn
+	socket.on('endTurn', function(){
+		ALLGAMES[socket.gameCode].alreadyPlayed = false;
+		Game.perform(new Action.switchPlayer(ALLGAMES[socket.gameCode]), ALLGAMES[socket.gameCode]);
+		Game.newTurn(ALLGAMES[socket.gameCode]);
 	});
 
 });
@@ -111,6 +116,7 @@ function gameState(hash) {
 	this.score = {0:0, 1:0};
 	this.gameOver = false;
 	this.thisPlayer = 0;
+	this.alreadyPlayed = false;
 }
 
 
@@ -119,16 +125,6 @@ function gameState(hash) {
 *****************/
 
 var Game = {
-
-	// board is a matrix that contains the current game state.
-	// board[x][y] would contain the state of the board x places from
-	// the left and y places from the top, zero-indexed.
-	board: [],
-	gameStack: [],
-	turnStack: [],
-	score: {0: 0, 1:0},
-	gameOver: false,
-	thisPlayer: 0,
 
 	// Initialize variable board to be a Matrix boardWidth by boardHeight in size
 	init: function(boardWidth, boardHeight, Model){
@@ -161,10 +157,9 @@ var Game = {
 		Model.gameStack.push(Model.turnStack);
 		Model.turnStack = [];
 	},
-	undo: function(command, Model){
-		turn = Model.gameStack.pop();
-		while(turn.length>0){
-			turn.pop().unexecute(Model);
+	undo: function(Model){
+		while(Model.turnStack.length>0){
+			Model.turnStack.pop().unexecute(Model);
 		}
 	},
 
@@ -177,14 +172,18 @@ var Game = {
 	},
 
 	play: function(xPos, yPos, Model) {
+		if(Model.alreadyPlayed){
+			Game.undo(Model);
+		}
 		if(Game.canPlay(xPos, yPos, Model)){
 			Game.place(xPos, yPos, Model);
 			Game.performKills(xPos, yPos, Model);
 			if(Game.isFive(xPos, yPos, Model) || Model.score[0] >= 5 || Model.score[1] >= 5){
 				Game.perform(new Action.gameOver(Model.gameOver), Model);
 			}
-			Game.perform(new Action.switchPlayer(Model), Model);
-			Game.newTurn(Model);
+			Model.alreadyPlayed = true;
+			//Game.perform(new Action.switchPlayer(Model), Model);
+			//Game.newTurn(Model);
 		}
 	},
 
@@ -311,7 +310,7 @@ var Game = {
     Undoable Actions
 ************************/
 
-var Action = (function(ALLGAMES){
+var Action = (function(){
 	// Game Over
 	function gameOver(Model) {
 		this.isOver = Model.gameOver;
@@ -392,4 +391,4 @@ var Action = (function(ALLGAMES){
 		switchPlayer: switchPlayer,
 		removePieces: removePieces
 	};
-})(ALLGAMES);
+})();
