@@ -1,4 +1,5 @@
-var express = require('express')
+var adler32 = require('./lib/adler32');
+var express = require('express');
 var app = express();
 var http = require('http').Server(app);
 
@@ -18,25 +19,6 @@ function log(text){
 	}
 }
 
-// Basic hashing function used to generate the game codes
-function adler32(data) {
-// Original at: https://gist.github.com/volodymyr-mykhailyk/2923823
-    var MOD_ADLER = 65521;
-    var a = 1, b = 0;
-    var index;
-
-    // Process each byte of the data in order
-    for (index = 0; index < data.length; ++index) {
-        a = (a + data.charCodeAt(index)) % MOD_ADLER;
-        b = (b + a) % MOD_ADLER;
-    }
-    //adler checksum as integer;
-    var adler = a | (b << 16);
-
-    //adler checksum as byte array
-    return adler.toString(16);
-}
-
 /***************************
     Socket Communication
 ***************************/
@@ -45,7 +27,7 @@ var io = require('socket.io')(http);
 
 // On connection to the client
 io.sockets.on('connection', function(socket){
-	console.log('client connected');
+	log('client connected');
 	// Let the client know that the server is ready
 	socket.emit('serverReady');
 	// Socket hasn't joined a game
