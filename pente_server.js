@@ -35,6 +35,8 @@ var io = require('socket.io').listen(8080);
 io.sockets.on('connection', function(socket){
 	// Let the client know that the server is ready
 	socket.emit('serverReady');
+	// Socket hasn't joined a game
+	socket.inGame = false;
 
 	// On request for a new game
 	socket.on('newBoard', function(board){
@@ -55,6 +57,7 @@ io.sockets.on('connection', function(socket){
 		ALLGAMES[hash] = new gameState(hash);
 		// Store the hash in the socket
 		socket.gameCode = hash;
+		socket.inGame = true;
 		socket.player = 0;
 		log("Hash is "+socket.gameCode);
 		// Join the room with that hash
@@ -68,6 +71,7 @@ io.sockets.on('connection', function(socket){
 		log("Received hash: "+hash);
 		if(ALLGAMES.hasOwnProperty(hash)){
 			socket.gameCode = hash;
+			socket.inGame = true;
 			socket.player = 1;
 			socket.join(socket.gameCode);
 			log("Sending joinedGame");
@@ -79,13 +83,16 @@ io.sockets.on('connection', function(socket){
 		}
 	});
 
-// !!! WARNING !!! Does not check if part of a game first
 	// On request to play a postion
 	socket.on('play', function(position){
-		if(socket.player === ALLGAMES[socket.gameCode].thisPlayer){
-			log('Play at '+position.xPos+", "+position.yPos);
-			Game.play(position.xPos, position.yPos, ALLGAMES[socket.gameCode]);
-			io.sockets.in(socket.gameCode).emit('render',ALLGAMES[socket.gameCode]);
+		// If in a game
+		if(socket.inGame){
+			// And if it's that player's turn
+			if(socket.player === ALLGAMES[socket.gameCode].thisPlayer){
+				log('Play at '+position.xPos+", "+position.yPos);
+				Game.play(position.xPos, position.yPos, ALLGAMES[socket.gameCode]);
+				io.sockets.in(socket.gameCode).emit('render',ALLGAMES[socket.gameCode]);
+			}
 		}
 	});
 
@@ -101,6 +108,7 @@ io.sockets.on('connection', function(socket){
 			ALLGAMES[socket.gameCode].alreadyPlayed = false;
 			Game.perform(new Action.switchPlayer(ALLGAMES[socket.gameCode]), ALLGAMES[socket.gameCode]);
 			Game.newTurn(ALLGAMES[socket.gameCode]);
+			io.sockets.in(socket.gameCode).emit('render',ALLGAMES[socket.gameCode]);
 		}
 	});
 
@@ -182,7 +190,7 @@ var Game = {
 			Game.place(xPos, yPos, Model);
 			Game.performKills(xPos, yPos, Model);
 			if(Game.isFive(xPos, yPos, Model) || Model.score[0] >= 5 || Model.score[1] >= 5){
-				Game.perform(new Action.gameOver(Model.gameOver), Model);
+				Game.perform(new Action.gameOver(Model), Model);
 			}
 			Model.alreadyPlayed = true;
 			//Game.perform(new Action.switchPlayer(Model), Model);
@@ -210,7 +218,7 @@ var Game = {
 			return false;
 	},
 
-	isSuicide: function(xPos, yPos, Model){
+	isSuicide: function(xPos, yPos, Model){ // Server crash
 		var isSuicide = false;
 		var displace = [-1,0,1];
 		for(var i=0; i<displace.length; i++){
@@ -219,7 +227,7 @@ var Game = {
 					continue;
 				if(Game.onBoard(xPos+displace[i], yPos+displace[j], Model) && Game.onBoard(xPos-displace[i], yPos-displace[j], Model) && !Game.isEmpty(xPos+displace[i],yPos+displace[j], Model) && !Game.isEmpty(xPos-displace[i],yPos-displace[j], Model)){ // If there are pieces on both sides of the space in the orientation of the vector
 					if(Model.board[xPos+displace[i]][yPos+displace[j]] === Game.currentPlayer(Model) && Model.board[xPos-displace[i]][yPos-displace[j]] === Game.otherPlayer(Model)){ // If the piece in front is current player and behind is other player
-						if(Game.onBoard(xPos+displace[i]*2,yPos+displace[j]*2), Model){ // If two places in front is on the board
+						if(Game.onBoard(xPos+displace[i]*2,yPos+displace[j]*2, Model)){ // If two places in front is on the board
 							if(Model.board[xPos+displace[i]*2][yPos+displace[j]*2] === Game.otherPlayer(Model)){ // If the piece two pieces in front is the other player
 								isSuicide = true;
 							}

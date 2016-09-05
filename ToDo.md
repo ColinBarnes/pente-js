@@ -13,7 +13,4 @@ Bugs:
 
 Recent:
 -------
-- Added alreadyPlayed to gameState
-- Game.play() now checks if you have already made a move
-- Added endTurn socket command
-- Moved switching player and turn to endTurn function
+- Added URL handling if incoming url has a hash
