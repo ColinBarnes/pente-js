@@ -1,5 +1,16 @@
+var express = require('express')
+var app = express();
+var http = require('http').Server(app);
+
+app.use(express.static(__dirname + '/public'));
+
+http.listen(3000, function(){
+  console.log('listening on *:3000');
+});
+
+
 var DEBUG = true;
-var ALLGAMES = {}; // 
+var ALLGAMES = {}; //
 
 function log(text){
 	if(DEBUG){
@@ -12,7 +23,7 @@ function adler32(data) {
     var MOD_ADLER = 65521;
     var a = 1, b = 0;
     var index;
- 
+
     // Process each byte of the data in order
     for (index = 0; index < data.length; ++index) {
         a = (a + data.charCodeAt(index)) % MOD_ADLER;
@@ -20,7 +31,7 @@ function adler32(data) {
     }
     //adler checksum as integer;
     var adler = a | (b << 16);
- 
+
     //adler checksum as byte array
     return adler.toString(16);
 }
@@ -29,10 +40,11 @@ function adler32(data) {
     Socket Communication
 ***************************/
 
-var io = require('socket.io').listen(8080);
+var io = require('socket.io')(http);
 
 // On connection to the client
 io.sockets.on('connection', function(socket){
+	console.log('client connected');
 	// Let the client know that the server is ready
 	socket.emit('serverReady');
 	// Socket hasn't joined a game
@@ -66,7 +78,7 @@ io.sockets.on('connection', function(socket){
 		socket.emit('joinedGame', socket.gameCode);
 		io.sockets.in(socket.gameCode).emit('render',ALLGAMES[socket.gameCode]);
 	});
-	
+
 	socket.on('joinGame', function(hash){
 		log("Received hash: "+hash);
 		if(ALLGAMES.hasOwnProperty(hash)){
@@ -279,7 +291,7 @@ var Game = {
 				var morePieces = true;
 				while(morePieces){ // Check in the positive direction
 					if(Game.onBoard(xPos+i*scalar, yPos+j*scalar, Model)){ // If the next piece is on the board
-						if(Model.board[xPos+i*scalar][yPos+j*scalar] === Game.currentPlayer(Model)){ // If the next piece is the same as the current player							
+						if(Model.board[xPos+i*scalar][yPos+j*scalar] === Game.currentPlayer(Model)){ // If the next piece is the same as the current player
 							numberOfPieces++;
 							scalar++;
 						}
@@ -294,9 +306,9 @@ var Game = {
 
 				morePieces = true;
 				scalar = 1;
-				while(morePieces){ // Check in the negative direction					
-					if(Game.onBoard(xPos+i*-scalar,yPos+j*-scalar, Model)){ // If the next piece is on the board						
-						if(Model.board[xPos+i*-scalar][yPos+j*-scalar] === Game.currentPlayer(Model)){ // If the next piece is the same as the current player							
+				while(morePieces){ // Check in the negative direction
+					if(Game.onBoard(xPos+i*-scalar,yPos+j*-scalar, Model)){ // If the next piece is on the board
+						if(Model.board[xPos+i*-scalar][yPos+j*-scalar] === Game.currentPlayer(Model)){ // If the next piece is the same as the current player
 							numberOfPieces++;
 							scalar++;
 						}
@@ -307,7 +319,7 @@ var Game = {
 					else{
 						morePieces = false;
 					}
-					
+
 				}
 				if (numberOfPieces>=5)
 					thereIsFive = true;
