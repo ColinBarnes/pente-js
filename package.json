@@ -2,7 +2,7 @@
   "name": "Pente",
   "version": "1.0.0",
   "description": "A javscript and canvas version of the board game Pente",
-  "main": "pente_server.js",
+  "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

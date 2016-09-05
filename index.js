@@ -20,6 +20,7 @@ function log(text){
 
 // Basic hashing function used to generate the game codes
 function adler32(data) {
+// Original at: https://gist.github.com/volodymyr-mykhailyk/2923823
     var MOD_ADLER = 65521;
     var a = 1, b = 0;
     var index;
