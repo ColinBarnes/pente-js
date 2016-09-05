@@ -1,0 +1,21 @@
+{
+  "name": "Pente",
+  "version": "1.0.0",
+  "description": "A javscript and canvas version of the board game Pente",
+  "main": "pente_server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "pente",
+    "board",
+    "game",
+    "canvas"
+  ],
+  "author": "Colin Barnes",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.14.0",
+    "socket.io": "^1.4.8"
+  }
+}
